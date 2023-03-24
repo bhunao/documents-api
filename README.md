@@ -69,13 +69,13 @@ Routes
 
     Deletes a specific document from the database based on the ID.
 
-Response Models
+### Response Models
 
 The API returns two types of response models: ResponseModel and ErrorResponseModel.
 
-    ResponseModel is used to return a successful response along with the data. It has two fields: data (the data returned by the API) and message (a success message).
+  **ResponseModel** is used to return a successful response along with the data. It has two fields: data (the data returned by the API) and message (a success message).
 
-    ErrorResponseModel is used to return an error response. It has two fields: code (the error code) and message (an error message).
+  **ErrorResponseModel** is used to return an error response. It has two fields: code (the error code) and message (an error message).
 
 ## Usage
 
