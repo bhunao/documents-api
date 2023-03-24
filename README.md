@@ -102,4 +102,4 @@ uvicorn main:app --reload
 
 ### Authors
 
-- me [@bhunao](github.com/bhunao)
+- me [@bhunao](https://github.com/bhunao/)
