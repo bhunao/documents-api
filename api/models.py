@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 
 
 now = datetime.now()
+
+
 class DocumentSchema(BaseModel):
     name: str = Field(...)
     path: str = Field(...)
@@ -31,6 +33,7 @@ class DocumentSchema(BaseModel):
             }
         }
 
+
 class UpdateDocumentSchema(BaseModel):
     name: Optional[str]
     path: Optional[str]
@@ -43,7 +46,7 @@ class UpdateDocumentSchema(BaseModel):
     type: Optional[str]
 
     class Config:
-        schema_extra ={
+        schema_extra = {
             "example": {
                 "name": "example name",
                 "path": "",
@@ -64,6 +67,7 @@ def ResponseModel(data, message):
         "code": 200,
         "message": message,
     }
+
 
 def ErrorResponseModel(code, message, error="An error occurred"):
     return {"error": error, "code": code, "message": message}
