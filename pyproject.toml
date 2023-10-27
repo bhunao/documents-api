@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "template-fastapi"
+name = "app"
 version = "0.1.0"
 description = ""
 authors = ["bhunao <bh.felix@hotmail.com>"]

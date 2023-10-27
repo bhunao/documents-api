@@ -1,4 +1,4 @@
 
 ## run
 
-> poetry run uvicorn template_fastapi.main:app --reload --host 0.0.0.0
+> docker build -t app_image . && docker run -d --name app_container -p 80:80 app_image
