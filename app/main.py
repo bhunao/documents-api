@@ -1,13 +1,14 @@
 from fastapi import FastAPI, HTTPException, Depends
+from fastapi.openapi.utils import get_openapi
 from sqlmodel import Session
+
+import json
 
 from . import crud, schemas
 from .database import engine as _engine, create_db_and_tables
 
 
 app = FastAPI()
-
-
 def get_session():
     with Session(_engine) as session:
         yield session
@@ -71,3 +72,13 @@ def read_posts(
 ):
     posts = crud.get_posts(session=session, skip=skip, limit=limit)
     return posts
+
+
+openapi_schema = get_openapi(
+    title="Documents API",
+    version="0.1.0",
+    description="API for storing and retriving documents in json.",
+    routes=app.routes,
+)
+with open("openapi.yaml", "w") as file:
+    file.write(json.dumps(openapi_schema))
