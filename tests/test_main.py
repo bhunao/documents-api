@@ -2,7 +2,7 @@ from pytest import fixture
 from random import randint
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
-from template_fastapi import crud, main, schemas
+from app import crud, main, schemas
 from fastapi.testclient import TestClient
 
 

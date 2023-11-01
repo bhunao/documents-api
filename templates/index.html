@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bruno Félix</title>
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+		<link rel="stylesheet" href="static/style.css">
+	</head>
+	<body class="bg-img">
+
+		<nav class="navbar is-dark" role="navigation" aria-label="main navigation">
+			<div class="navbar-brand">
+				<h2 class="title is-3 m-2 has-text-light">Bruno Félix</h1>
+				<a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarMenu">
+					<span aria-hidden="true"></span>
+					<span aria-hidden="true"></span>
+					<span aria-hidden="true"></span>
+				</a>
+			</div>
+
+			<div id="navbarMenu" class="navbar-menu">
+				<div class="navbar-end">
+					<a class="navbar-item is-active">
+						Inicio
+					</a>
+
+					<div class="navbar-item has-dropdown is-hoverable">
+						<a class="navbar-link">
+							Contato
+						</a>
+
+						<div class="navbar-dropdown">
+							<a href="https://www.linkedin.com/in/bhunao/" class="navbar-item">
+								LinkedIn
+							</a>
+							<a href="https://github.com/bhunao/" class="navbar-item">
+								Github
+							</a>
+						</div>
+					</div>
+
+				</div>
+			</div>
+		</nav>
+
+		{% for video in videos %}
+		algo aqui
+		{% endfor %}
+
+		<section class="hero is-small">
+			<div class="hero-body">
+
+				<div class="has-background-light p-5">
+					<video preload="auto" controls>
+						<source src="/video" type="video/mp4" />
+					</video>
+				</div>
+
+			</div>
+		</section>
+
+		<footer class="footer">
+			<div class="content has-text-centered">
+				<p>
+				Feito com <strong><a href="https://bulma.io/">Bulma</a></strong> e hosteado no github.
+				</p>
+			</div>
+		</footer>
+
+	</body>
+	<script src="js_index.js">
+	</script>
+</html>
