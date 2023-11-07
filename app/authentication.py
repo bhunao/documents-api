@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from sqlmodel import Session
+from sqlmodel import Session, SQLModel
 
-from app import settings
-from app.template_blog import schemas, crud, models, database
+from app import settings, database
+from app.users import crud, models, schemas
 
 
 # to get a string like this run:
@@ -18,8 +18,16 @@ CREDENTIALS_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
-
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: str | None = None
 
 
 def create_access_token(
@@ -53,7 +61,7 @@ async def get_current_user(
         username = payload.get("sub")
         if username is None:
             raise CREDENTIALS_EXCEPTION
-        token_data = schemas.TokenData(username=username)
+        token_data = TokenData(username=username)
     except JWTError:
         raise CREDENTIALS_EXCEPTION
     assert token_data.username is not None
@@ -64,8 +72,16 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-        current_user: Annotated[models.User, Depends(get_current_user)]
-) -> models.User:
+        current_user: Annotated[schemas.User, Depends(get_current_user)],
+        request: Request
+) -> schemas.User:
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    request.state.current_user = current_user
     return current_user
+
+
+CurrentUserAnnotated = Annotated[
+    schemas.User,
+    Depends(get_current_active_user)
+]

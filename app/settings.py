@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 with open("app/config.toml", "rb") as file:
     config = tomllib.load(file)
 
-TITLE = config["config"]
+TITLE = config["config"]['title']
 
 SECRET_KEY = config["authentication"]["secret_key"]
 ALGORITHM = config["authentication"]["algorithm"]

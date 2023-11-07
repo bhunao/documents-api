@@ -1,11 +1,10 @@
 from typing import List
 from sqlmodel import Session, select
 
-from app import authentication
+from app.settings import pwd_context
 
 from . import models, schemas
-from .models import User, Post
-from app.settings import pwd_context
+from .models import User
 
 
 def get_user(session: Session, user_id: int) -> User | None:
@@ -33,27 +32,12 @@ def get_users(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
 def create_user(session: Session, user: schemas.UserCreate) -> User:
     new_user = models.User(
         email=user.email,
-        hashed_password=authentication.pwd_context.hash(user.password)
+        hashed_password=pwd_context.hash(user.password)
     )
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
     return new_user
-
-
-def get_posts(session: Session, skip: int = 0, limit: int = 100) -> List[Post]:
-    query = select(Post).offset(skip).limit(limit)
-    result = session.exec(query).all()
-    return result
-
-
-def create_user_post(session: Session, post: schemas.PostCreate, user_id: int) -> Post:
-    new_post = Post.from_orm(post)
-    new_post.owner_id = user_id
-    session.add(new_post)
-    session.commit()
-    session.refresh(new_post)
-    return new_post
 
 
 def authenticate_user(
