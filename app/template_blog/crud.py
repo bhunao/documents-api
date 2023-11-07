@@ -1,11 +1,11 @@
 from typing import List
-from sqlalchemy.future import Engine
 from sqlmodel import Session, select
 
 from app import authentication
 
 from . import models, schemas
 from .models import User, Post
+from app.settings import pwd_context
 
 
 def get_user(session: Session, user_id: int) -> User | None:
@@ -25,10 +25,7 @@ def get_user_by_email(session: Session, email: str) -> User | None:
 
 
 def get_users(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
-    query = select(User)
-    print("="*50)
-    print(query)
-    print("="*50)
+    query = select(User).offset(skip).limit(limit)
     result = session.exec(query).all()
     return result
 
@@ -57,3 +54,16 @@ def create_user_post(session: Session, post: schemas.PostCreate, user_id: int) -
     session.commit()
     session.refresh(new_post)
     return new_post
+
+
+def authenticate_user(
+        session: Session,
+        username: str,
+        password: str
+) -> models.User | None:
+    user = get_user_by_email(session, username)
+    if not user:
+        return None
+    if not pwd_context.verify(password, user.hashed_password):
+        return None
+    return user

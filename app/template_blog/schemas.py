@@ -27,3 +27,12 @@ class Post(SQLModel):
     content: str = Field(index=True)
     owner_id: int = Field(default=None, foreign_key="user.id")
     owner: Optional[User] = Relationship(back_populates="Users")
+
+
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: str | None = None
