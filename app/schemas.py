@@ -12,7 +12,6 @@ class UserCreate(SQLModel):
 class User(SQLModel):
     id: int = Field(default=None, primary_key=True)
     email: str = Field(unique=True, index=True)
-    hashed_password: str
     is_active: bool = True
     posts: List["Post"] = Relationship(back_populates="Post")
 

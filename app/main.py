@@ -1,49 +1,59 @@
+from contextlib import asynccontextmanager
 from typing import Annotated
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.openapi.utils import get_openapi
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
 import json
 
-from . import crud, schemas
-from .database import engine as _engine, create_db_and_tables
+from app import authentication, settings
+from app.authentication import get_current_active_user
 
+from . import crud, schemas
+from .database import create_db_and_tables, get_session
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+    print('...end')
 
 app = FastAPI(
-    title="Template Project"
+    title=settings.TITLE,
+    lifespan=lifespan
 )
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def decode_token(token: str):
-    password = token + "notreallyhashed"
-    return schemas.User(email="test@email", hashed_password=password)
+@app.post("/login", response_model=authentication.Token)
+async def login(
+        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+        session: Session = Depends(get_session)
+):
+    user = authentication.authenticate_user(
+        session,
+        form_data.username,
+        form_data.password
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authqwertyenticate": "Bearer"}
+        )
+    access_token = authentication.create_access_token(
+        data={"sub": user.email},
+        expires_delta=authentication.ACCESS_TOKEN_EXPIRES
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    user = decode_token(token)
-    return user
-
-
-def get_session():
-    with Session(_engine) as session:
-        yield session
-
-
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
-
-
-@app.get("/me/")
-def get_me(current_user: Annotated[schemas.User, Depends(get_current_user)]):
+@app.get("/users/me", response_model=schemas.User)
+def read_me(
+        current_user: Annotated[schemas.User, Depends(get_current_active_user)]
+):
     return current_user
-
-
-@app.get("/test/")
-def test(token: Annotated[str, Depends(oauth2_scheme)]):
-    return {"msg": "test", "token": token}
 
 
 @app.post("/users/", response_model=schemas.User)

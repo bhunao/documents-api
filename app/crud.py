@@ -2,6 +2,8 @@ from typing import List
 from sqlalchemy.future import Engine
 from sqlmodel import Session, select
 
+from app import authentication
+
 from . import models, schemas
 from .models import User, Post
 
@@ -32,10 +34,9 @@ def get_users(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
 
 
 def create_user(session: Session, user: schemas.UserCreate) -> User:
-    fake_hashed_password = user.password + "notreallyhashed"
     new_user = models.User(
         email=user.email,
-        hashed_password=fake_hashed_password
+        hashed_password=authentication.pwd_context.hash(user.password)
     )
     session.add(new_user)
     session.commit()
