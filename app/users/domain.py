@@ -12,8 +12,6 @@ from . import domain, models, schemas
 from .models import User
 
 
-# to get a string like this run:
-# openssl rand -hex 32
 CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Could not validate credentials",

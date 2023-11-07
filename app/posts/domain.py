@@ -23,7 +23,6 @@ def create_user_post(session: Session, post: schemas.PostCreate, user_id: int) -
 
 def delete_post(session: Session, id: int) -> Post:
     query = select(Post).where(Post.id == id)
-    print(query, "================================")
     post = session.exec(query).one_or_none()
     if post is None:
         raise HTTPException(status_code=404, detail=f"post with id '{id}' not found")

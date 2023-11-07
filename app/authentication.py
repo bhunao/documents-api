@@ -1,19 +1,9 @@
 from datetime import datetime, timedelta
 
-from fastapi import HTTPException, status
 from jose import jwt
 from sqlmodel import SQLModel
 
 from . import settings
-
-
-# to get a string like this run:
-# openssl rand -hex 32
-CREDENTIALS_EXCEPTION = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
-)
 
 
 class Token(SQLModel):
