@@ -1,8 +1,9 @@
+from datetime import timedelta
 from pytest import fixture
 from random import randint
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
-from template_fastapi import crud, main, schemas
+from app import domain, main, schemas, authentication
 from fastapi.testclient import TestClient
 
 
@@ -27,12 +28,6 @@ def client_fixture(session: Session):
     app.dependency_overrides.clear()
 
 
-def test_read_main(client: TestClient):
-    response = client.get("/test/")
-    assert response.status_code == 200
-    assert response.json() == {"msg": "test"}
-
-
 def test_create_user(client: TestClient):
     rand_n = randint(0, 999)
     json = {
@@ -43,7 +38,39 @@ def test_create_user(client: TestClient):
     data = response.json()
     assert response.status_code == 200
     assert data["email"] == json["email"]
-    assert data["hashed_password"] == json["password"] + "notreallyhashed"
+
+
+def test_login_user(client: TestClient):
+    rand_n = randint(0, 999)
+    user_json = {
+        "email": f"user{rand_n}@something.like",
+        "password": f"password{rand_n}"
+    }
+    response = client.post("/users/", json=user_json)
+    data = response.json()
+    assert response.status_code == 200
+    assert data["email"] == user_json["email"]
+
+    headers = {
+        'accept': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+    }
+    data = {
+        'username': user_json['email'],
+        'password': user_json['password'],
+    }
+
+    response = client.post("/login", headers=headers, data=data)
+    response_data = response.json()
+
+    access_token = authentication.create_access_token(
+        data={"sub": user_json['email']},
+        expires_delta=authentication.ACCESS_TOKEN_EXPIRES
+    )
+
+    assert response.status_code == 200
+    assert response_data["token_type"] == "bearer"
+    assert response_data["access_token"] == access_token
 
 
 def test_read_user(session: Session, client: TestClient):
@@ -54,7 +81,7 @@ def test_read_user(session: Session, client: TestClient):
             email=f"user{rand_n}@something.like",
             password=f"password{rand_n}"
         )
-        user = crud.create_user(session, user)
+        user = domain.create_user(session, user)
         users.append(user)
 
     for user in users:
@@ -64,7 +91,6 @@ def test_read_user(session: Session, client: TestClient):
         assert response.status_code == 200
         assert data['id'] == user.id
         assert data['email'] == user.email
-        assert data['hashed_password'] == user.hashed_password
 
 
 def test_create_post(session: Session, client: TestClient):
@@ -73,14 +99,13 @@ def test_create_post(session: Session, client: TestClient):
         email=f"user{rand_n}@something.like",
         password=f"password{rand_n}"
     )
-    user = crud.create_user(session, user)
+    user = domain.create_user(session, user)
     response = client.get(f"/users/{user.id}/")
     data = response.json()
 
     assert response.status_code == 200
     assert data['id'] == user.id
     assert data['email'] == user.email
-    assert data['hashed_password'] == user.hashed_password
 
     for _ in range(10):
         json = {

@@ -1,14 +1,6 @@
-from typing import List, Optional
+from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
-
-
-class User(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    email: str = Field(unique=True, index=True)
-    hashed_password: str
-    is_active: bool = True
-
-    posts: List["Post"] = Relationship(back_populates="owner")
+from ..users.models import User
 
 
 class Post(SQLModel, table=True):
