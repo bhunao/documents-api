@@ -37,7 +37,7 @@ async def login(
         form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
         session: Session = Depends(get_session)
 ):
-    user = users.crud.authenticate_user(
+    user = users.domain.authenticate_user(
         session,
         form_data.username,
         form_data.password
@@ -60,10 +60,10 @@ def create_user(
         user: users.schemas.UserCreate,
         session: Session = Depends(get_session)
 ):
-    db_user = users.crud.get_user_by_email(session=session, email=user.email)
+    db_user = users.domain.get_user_by_email(session=session, email=user.email)
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
-    return users.crud.create_user(session=session, user=user)
+    return users.domain.create_user(session=session, user=user)
 
 
 openapi_schema = get_openapi(

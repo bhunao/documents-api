@@ -3,7 +3,7 @@ from pytest import fixture
 from random import randint
 from sqlalchemy.pool import StaticPool
 from sqlmodel import Session, SQLModel, create_engine
-from app import crud, main, schemas, authentication
+from app import domain, main, schemas, authentication
 from fastapi.testclient import TestClient
 
 
@@ -81,7 +81,7 @@ def test_read_user(session: Session, client: TestClient):
             email=f"user{rand_n}@something.like",
             password=f"password{rand_n}"
         )
-        user = crud.create_user(session, user)
+        user = domain.create_user(session, user)
         users.append(user)
 
     for user in users:
@@ -99,7 +99,7 @@ def test_create_post(session: Session, client: TestClient):
         email=f"user{rand_n}@something.like",
         password=f"password{rand_n}"
     )
-    user = crud.create_user(session, user)
+    user = domain.create_user(session, user)
     response = client.get(f"/users/{user.id}/")
     data = response.json()
 

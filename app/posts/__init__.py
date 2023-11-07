@@ -1,3 +1,3 @@
 from . import schemas
-from . import crud
+from . import domain
 from . import schemas

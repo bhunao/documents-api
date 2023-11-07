@@ -1,13 +1,10 @@
 from datetime import datetime, timedelta
-from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
-from sqlmodel import Session, SQLModel
+from fastapi import HTTPException, status
+from jose import jwt
+from sqlmodel import SQLModel
 
-from app import settings, database
-from app.users import crud, models, schemas
+from . import settings
 
 
 # to get a string like this run:
@@ -17,8 +14,6 @@ CREDENTIALS_EXCEPTION = HTTPException(
     detail="Could not validate credentials",
     headers={"WWW-Authenticate": "Bearer"},
 )
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 class Token(SQLModel):
@@ -48,40 +43,3 @@ def create_access_token(
     return encoded_jwt
 
 
-async def get_current_user(
-        token: Annotated[str, Depends(oauth2_scheme)],
-        session: Session = Depends(database.get_session)
-) -> models.User:
-    try:
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-        username = payload.get("sub")
-        if username is None:
-            raise CREDENTIALS_EXCEPTION
-        token_data = TokenData(username=username)
-    except JWTError:
-        raise CREDENTIALS_EXCEPTION
-    assert token_data.username is not None
-    user = crud.get_user_by_email(session, token_data.username)
-    if user is None:
-        raise CREDENTIALS_EXCEPTION
-    return user
-
-
-async def get_current_active_user(
-        current_user: Annotated[schemas.User, Depends(get_current_user)],
-        request: Request
-) -> schemas.User:
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    request.state.current_user = current_user
-    return current_user
-
-
-CurrentUserAnnotated = Annotated[
-    schemas.User,
-    Depends(get_current_active_user)
-]
