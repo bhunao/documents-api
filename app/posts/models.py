@@ -1,6 +1,5 @@
 from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
-from ..users.models import User
 
 
 class Post(SQLModel, table=True):
@@ -9,4 +8,4 @@ class Post(SQLModel, table=True):
     content: str = Field(index=True)
 
     owner_id: int = Field(default=None, foreign_key="user.id")
-    owner: Optional[User] = Relationship(back_populates="posts")
+    owner: Optional["User"] = Relationship(back_populates="posts")

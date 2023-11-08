@@ -31,32 +31,32 @@ def client_fixture(session: Session):
 def test_create_user(client: TestClient):
     rand_n = randint(0, 999)
     json = {
-        "email": f"user{rand_n}@something.like",
+        "username": f"user{rand_n}@something.like",
         "password": f"password{rand_n}"
     }
     response = client.post("/users/", json=json)
     data = response.json()
     assert response.status_code == 200
-    assert data["email"] == json["email"]
+    assert data["username"] == json["username"]
 
 
 def test_login_user(client: TestClient):
     rand_n = randint(0, 999)
     user_json = {
-        "email": f"user{rand_n}@something.like",
+        "username": f"user{rand_n}@something.like",
         "password": f"password{rand_n}"
     }
     response = client.post("/users/", json=user_json)
     data = response.json()
     assert response.status_code == 200
-    assert data["email"] == user_json["email"]
+    assert data["username"] == user_json["username"]
 
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/x-www-form-urlencoded',
     }
     data = {
-        'username': user_json['email'],
+        'username': user_json['username'],
         'password': user_json['password'],
     }
 
@@ -64,7 +64,7 @@ def test_login_user(client: TestClient):
     response_data = response.json()
 
     access_token = authentication.create_access_token(
-        data={"sub": user_json['email']},
+        data={"sub": user_json['username']},
         expires_delta=authentication.ACCESS_TOKEN_EXPIRES
     )
 
@@ -78,7 +78,7 @@ def test_read_user(session: Session, client: TestClient):
     for user in range(10):
         rand_n = randint(0, 999)
         user = schemas.UserCreate(
-            email=f"user{rand_n}@something.like",
+            username=f"user{rand_n}@something.like",
             password=f"password{rand_n}"
         )
         user = domain.create_user(session, user)
@@ -90,13 +90,13 @@ def test_read_user(session: Session, client: TestClient):
 
         assert response.status_code == 200
         assert data['id'] == user.id
-        assert data['email'] == user.email
+        assert data['username'] == user.username
 
 
 def test_create_post(session: Session, client: TestClient):
     rand_n = randint(0, 999)
     user = schemas.UserCreate(
-        email=f"user{rand_n}@something.like",
+        username=f"user{rand_n}@something.like",
         password=f"password{rand_n}"
     )
     user = domain.create_user(session, user)
@@ -105,7 +105,7 @@ def test_create_post(session: Session, client: TestClient):
 
     assert response.status_code == 200
     assert data['id'] == user.id
-    assert data['email'] == user.email
+    assert data['username'] == user.username
 
     for _ in range(10):
         json = {
