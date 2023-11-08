@@ -49,7 +49,7 @@ async def login(
             headers={"WWW-Authqwertyenticate": "Bearer"}
         )
     access_token = authentication.create_access_token(
-        data={"sub": user.email},
+        data={"sub": user.username},
         expires_delta=settings.ACCESS_TOKEN_EXPIRES
     )
     return {"access_token": access_token, "token_type": "bearer"}
@@ -60,9 +60,9 @@ def create_user(
         user: users.schemas.UserCreate,
         session: Session = Depends(get_session)
 ):
-    db_user = users.domain.get_user_by_email(session=session, email=user.email)
+    db_user = users.domain.read_by_username(session=session, username=user.username)
     if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="username already registered")
     return users.domain.create_user(session=session, user=user)
 
 

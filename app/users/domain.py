@@ -19,31 +19,9 @@ CREDENTIALS_EXCEPTION = HTTPException(
 )
 
 
-def get_user(session: Session, user_id: int) -> User | None:
-    query = select(User).where(
-        User.id == user_id
-    )
-    result = session.exec(query).first()
-    return result
-
-
-def get_user_by_email(session: Session, email: str) -> User | None:
-    query = select(User).where(
-        User.email == email
-    )
-    result = session.exec(query).first()
-    return result
-
-
-def get_users(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
-    query = select(User).offset(skip).limit(limit)
-    result = session.exec(query).all()
-    return result
-
-
 def create_user(session: Session, user: schemas.UserCreate) -> User:
     new_user = models.User(
-        email=user.email,
+        username=user.username,
         hashed_password=pwd_context.hash(user.password)
     )
     session.add(new_user)
@@ -52,12 +30,34 @@ def create_user(session: Session, user: schemas.UserCreate) -> User:
     return new_user
 
 
+def read_all(session: Session, skip: int = 0, limit: int = 100) -> List[User]:
+    query = select(User).offset(skip).limit(limit)
+    result = session.exec(query).all()
+    return result
+
+
+def read(session: Session, user_id: int) -> User | None:
+    query = select(User).where(
+        User.id == user_id
+    )
+    result = session.exec(query).first()
+    return result
+
+
+def read_by_username(session: Session, username: str) -> User | None:
+    query = select(User).where(
+        User.username == username
+    )
+    result = session.exec(query).first()
+    return result
+
+
 def authenticate_user(
         session: Session,
         username: str,
         password: str
 ) -> models.User | None:
-    user = get_user_by_email(session, username)
+    user = read_by_username(session, username)
     if not user:
         return None
     if not pwd_context.verify(password, user.hashed_password):
@@ -82,7 +82,7 @@ async def get_current_user(
     except JWTError:
         raise CREDENTIALS_EXCEPTION
     assert token_data.username is not None
-    user = domain.get_user_by_email(session, token_data.username)
+    user = domain.read_by_username(session, token_data.username)
     if user is None:
         raise CREDENTIALS_EXCEPTION
     return user
@@ -96,9 +96,3 @@ async def get_current_active_user(
         raise HTTPException(status_code=400, detail="Inactive user")
     request.state.current_user = current_user
     return current_user
-
-
-CurrentUserAnnotated = Annotated[
-    schemas.User,
-    Depends(get_current_active_user)
-]
