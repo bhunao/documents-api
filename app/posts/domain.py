@@ -1,14 +1,30 @@
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from sqlmodel import Session, select
+
+from app.modules.base_module import BaseModule
 
 from . import schemas
 from .models import Post
 from app.users.models import User
 
 
+class PostDomain(BaseModule):
+    def __init__(
+            self,
+            session: Session,
+            current_user: Optional[User] = None
+    ) -> None:
+        super().__init__(
+            model=Post,
+            session=session,
+            current_user=current_user
+        )
+
+
 def create(session: Session, post: schemas.PostCreate, user_id: int) -> Post:
     new_post = Post.from_orm(post)
+    Post.from_orm
     new_post.owner_id = user_id
     session.add(new_post)
     session.commit()

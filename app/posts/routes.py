@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from app.database import get_session
+from app.posts.models import Post
 from app.users.domain import get_current_active_user
 
 from . import domain, schemas
@@ -21,12 +22,9 @@ def create_post(
                                 Depends(get_current_active_user)],
         session: Session = Depends(get_session)
 ):
-    result = domain.create(
-        session=session,
-        post=post,
-        user_id=current_user.id
-    )
-    return result
+    post_module = domain.PostDomain(session=session, current_user=current_user)
+    new_post = post_module.create(post)
+    return new_post
 
 
 @router.get("/all", response_model=list[schemas.Post])
@@ -35,7 +33,8 @@ def read_all_posts(
         limit: int = 100,
         session: Session = Depends(get_session)
 ):
-    posts = domain.read_all(session=session, skip=skip, limit=limit)
+    post_module = domain.PostDomain(session=session)
+    posts = post_module.read_all(skip=skip, limit=limit)
     return posts
 
 
@@ -46,8 +45,8 @@ def read_post(
                             Depends(get_current_active_user)],
     session: Session = Depends(get_session)
 ):
-    assert current_user is not None
-    post = domain.read(session, id)
+    post_module = domain.PostDomain(session=session, current_user=current_user)
+    post = post_module.read(Post.id == id)
     return post
 
 
@@ -59,8 +58,8 @@ def update_post(
                                 Depends(get_current_active_user)],
         session: Session = Depends(get_session)
 ):
-    assert current_user is not None
-    post = domain.update(session, id, new_post, current_user)
+    post_module = domain.PostDomain(session=session, current_user=current_user)
+    post = post_module.update(id, new_post)
     return post
 
 
