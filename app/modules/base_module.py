@@ -1,94 +1,79 @@
-from typing import Dict, Generic, List, Optional, TypeVar
-from fastapi import HTTPException
+import logging
+from typing import Generic, List, TypeVar
 
+from fastapi import HTTPException
+from sqlalchemy.sql.elements import BinaryExpression
 from sqlmodel import SQLModel, Session, select
 
-from app.users.models import User
 
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 M = TypeVar("M", bound=SQLModel)
 
 
 class BaseModule(Generic[M]):
-    def __init__(
-            self,
-            model: M,
-            session: Session,
-            current_user: Optional[User] = None
-    ) -> None:
-        self._model: M = model
-        self._session = session
-        self._current: M | None = None
-        self._current_user: Optional[User] = current_user
+    def __init__(self, model: M, session: Session) -> None:
+        self.model: M = model
+        self.session = session
+        logger.info(f"BaseModule created with model {model.__name__}")
 
-    def create(self, vals: Dict[str, str] | SQLModel) -> M:
-        new_entry = self._model.from_orm(vals)
-        if self._current_user is None:
-            raise HTTPException(
-                status_code=404, detail="user not found")
-        new_entry.owner_id = self._current_user.id
-        self._session.add(new_entry)
-        self._session.commit()
-        self._session.refresh(new_entry)
+    def _update_model(self, model: M, update: M) -> None:
+        for key, val in update:
+            model.__setattr__(key, val)
+
+    def create(self, new_entry: M) -> M:
+        db_entry = self.model.from_orm(new_entry)
+        self._update_model(db_entry, new_entry)
+        self.session.add(new_entry)
+        self.session.commit()
+        self.session.refresh(new_entry)
+        logger.debug(f"new entry added to {self.model.__name__}")
         return new_entry
 
-    def read(self, *where) -> M:
-        model: M = self._model
-        query = select(model).where(*where)
-        result = self._session.exec(query).one_or_none()
+    def read(self, *where: BinaryExpression) -> M:
+        query = select(self.model).where(*where)
+        result = self.session.exec(query).one_or_none()
 
         if result is None:
+            logger.error(f"{self.model.__name__} not found")
             raise HTTPException(
-                status_code=404, detail="not found")
+                status_code=404, detail=f"{self.model.__name__} not found")
+
+        logger.debug(f"found {self.model.__name__} with id {result.id}")
         return result
 
-    def read_all(self, skip: int = 0, limit: int = 100) -> M:
-        model: M = self._model
-
-        query = select(model).offset(skip).limit(limit)
-        result = self._session.exec(query).all()
+    def read_all(self, *where: BinaryExpression, skip: int = 0, limit: int = 100) -> M:
+        query = select(self.model).offset(skip).limit(limit)
+        result = self.session.exec(query).all()
+        logger.debug(f"read {len(result)} lines from {skip} to {skip+limit}")
         return result
 
-    def update(self, id: int, vals: Dict[str, str]) -> M:
-        model = self._model
-        user = self._current_user
+    def update(self, id: int, schema: M) -> M:
+        db_entry = self.read(self.model.id == id)
 
-        query = select(model).where(model.id == id)
-        db_entry = self._session.exec(query).one_or_none()
         if db_entry is None:
+            logger.debug(f"{self.model.__name__} not found")
             raise HTTPException(
-                status_code=404, detail=f"post with id '{id}' not found")
-        if not db_entry.owner_id == user.id:
-            raise HTTPException(
-                status_code=401, detail="this post is not yours")
-        db_entry.from_orm(vals)
-        SQLModel.up
-        User().update_forward_refs
-        self._session.add(db_entry)
-        self._session.commit()
-        self._session.refresh(db_entry)
+                status_code=404, detail=f"{self.model.__name__} not found")
+
+        self._update_model(db_entry, schema)
+        self.session.add(db_entry)
+        self.session.commit()
+        self.session.refresh(db_entry)
+        logger.debug(f"{self.model.__name__} with id {id} updated")
         return db_entry
 
-    def delete(self) -> M:
-        model = self._model
-        query = select(model).where(model.id == id)
-        user = self._current_user
-        post = self._session.exec(query).one_or_none()
+    def delete(self, id: int) -> bool:
+        db_entry = self.read(self.model.id == id)
+        self.session.delete(db_entry)
+        self.session.commit()
+        logger.debug(f"{self.model.__name__} with id {id} deleted")
+        return True
 
-        if user is None:
-            raise HTTPException(
-                status_code=401, detail="user not found")
-
-        if post is None:
-            raise HTTPException(
-                status_code=404, detail=f"post with id '{id}' not found")
-
-        if not post.owner_id == user.id:
-            raise HTTPException(
-                status_code=401, detail="this post is not yours")
-
-        self._session.delete(post)
-        self._session.commit()
-        return post
-
-    def search(self) -> List[M]: ...
+    def search(self, *where: BinaryExpression) -> List[M]:
+        query = select(self.model).where(*where)
+        result = self.session.exec(query).all()
+        logger.debug(f"search found {len(result)} lines")
+        return result

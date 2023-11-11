@@ -70,6 +70,6 @@ def delete_post(
                             Depends(get_current_active_user)],
     session: Session = Depends(get_session)
 ):
-    assert current_user is not None
-    deleted = domain.delete(session, id, current_user)
+    post_module = domain.PostDomain(session=session, current_user=current_user)
+    deleted = post_module.delete(id)
     return {"deleted": deleted}
