@@ -1,61 +1,54 @@
-from typing import List
+from typing import List, Optional
 from fastapi import HTTPException
 from sqlmodel import Session, select
+
+from app.modules.base_module import BaseModule
 
 from . import schemas
 from .models import Post
 from app.users.models import User
 
-
-def create(session: Session, post: schemas.PostCreate, user_id: int) -> Post:
-    new_post = Post.from_orm(post)
-    new_post.owner_id = user_id
-    session.add(new_post)
-    session.commit()
-    session.refresh(new_post)
-    return new_post
+from icecream import ic
 
 
-def read_all(session: Session, skip: int = 0, limit: int = 100) -> List[Post]:
-    query = select(Post).offset(skip).limit(limit)
-    result = session.exec(query).all()
-    return result
+class PostDomain(BaseModule):
+    def __init__(
+            self,
+            session: Session,
+            current_user: Optional[User] = None
+    ) -> None:
+        super().__init__(
+            model=Post,
+            session=session,
+        )
+        self.current_user = current_user
 
+    def create(self, post: schemas.PostCreate) -> Post:
+        new_entry = Post.from_orm(post)
+        if self.current_user is None:
+            raise HTTPException(
+                status_code=404, detail="user not found")
+        new_entry.owner_id = self.current_user.id
+        self.current_user
+        return super().create(new_entry)
 
-def read(session: Session, id: int) -> Post:
-    query = select(Post).where(Post.id == id)
-    result = session.exec(query).one_or_none()
-    if result is None:
-        raise HTTPException(status_code=404, detail=f"no post with id '{id}'")
-    return result
+    def update(self, id: int, post: schemas.PostCreate) -> Post:
+        user = self.current_user
+        if user is None:
+            raise HTTPException(
+                status_code=404, detail="user not found")
 
+        db_post = self.read(self.model.id == id)
+        if db_post.owner_id != user.id:
+            raise HTTPException(
+                status_code=401, detail="this post is not yours")
 
-def update(session: Session, id: int, post: schemas.PostCreate, user: User):
-    query = select(Post).where(Post.id == id)
-    db_post = session.exec(query).one_or_none()
-    if db_post is None:
-        raise HTTPException(
-            status_code=404, detail=f"post with id '{id}' not found")
-    if not db_post.owner_id == user.id:
-        raise HTTPException(
-            status_code=401, detail="this post is not yours")
-    db_post.title = post.title
-    db_post.content = post.content
-    session.add(db_post)
-    session.commit()
-    session.refresh(db_post)
-    return db_post
+        return super().update(id, post)
 
-
-def delete(session: Session, id: int, user: User) -> Post:
-    query = select(Post).where(Post.id == id)
-    post = session.exec(query).one_or_none()
-    if post is None:
-        raise HTTPException(
-            status_code=404, detail=f"post with id '{id}' not found")
-    if not post.owner_id == user.id:
-        raise HTTPException(
-            status_code=401, detail="this post is not yours")
-    session.delete(post)
-    session.commit()
-    return post
+    def delete(self, id: int) -> bool:
+        db_post = self.read(self.model.id == id)
+        user = self.current_user
+        if user is not None and not db_post.owner_id == user.id:
+            raise HTTPException(
+                status_code=401, detail="this post is not yours")
+        return super().delete(id)

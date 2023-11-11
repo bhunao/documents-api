@@ -15,3 +15,12 @@ class User(SQLModel):
     username: str = Field(unique=True, index=True)
     is_active: bool = True
     posts: List["Post"] = Relationship(back_populates="Post")
+
+    
+class Token(SQLModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(SQLModel):
+    username: str | None = None
