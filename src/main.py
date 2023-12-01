@@ -1,6 +1,5 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from icecream import ic
 from sqlmodel import SQLModel
 
 from src.database import engine
@@ -16,6 +15,5 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 for _app in app_list:
-    ic(_app.__name__)
     router = _app.routes.router
     app.include_router(router)
