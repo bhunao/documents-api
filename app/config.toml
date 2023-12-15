@@ -1,8 +1,0 @@
-[config]
-title = "Template Project"
-
-[authentication]
-# openssl rand -hex 32
-secret_key = "14f8f4f7113d0e81cd33fd8b468949f6b1584e8a9fca1e3030cca299481c1d9a"
-algorithm = "HS256"
-access_token_expires = 30

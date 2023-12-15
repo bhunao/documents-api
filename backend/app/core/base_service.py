@@ -6,14 +6,12 @@ from sqlalchemy.sql.elements import BinaryExpression
 from sqlmodel import SQLModel, Session, select
 
 
-logging.basicConfig()
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 M = TypeVar("M", bound=SQLModel)
 
 
-class BaseModule(Generic[M]):
+class BaseService(Generic[M]):
     def __init__(self, model: M, session: Session) -> None:
         self.model: M = model
         self.session = session
