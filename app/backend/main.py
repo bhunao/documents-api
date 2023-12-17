@@ -1,41 +1,24 @@
 import logging
-from fastapi import FastAPI, Depends
 
-from sqlmodel import Session
+from fastapi import FastAPI
 
-from .core.utils import get_session, lifespan
-from .core.base_service import BaseService
-from .models import Post
+from .core.utils import lifespan
+from .routes import news, users
 
 
 logger = logging.getLogger(__name__)
 
 
-TITLE = "TITULO"
+TITLE = "WiproXD"
 app = FastAPI(
     title=TITLE,
     lifespan=lifespan
 )
 
+app.include_router(users.router)
+app.include_router(news.router)
+
 
 @app.get("/")
-def read_all(session: Session = Depends(get_session)):
-    ppost = BaseService(Post, session)
-    result = ppost.read_all()
-    return result
-
-
-@app.post("/new")
-def create(session: Session = Depends(get_session), coisa: str = ""):
-    post = Post(content=coisa)
-    ppost = BaseService(Post, session)
-    ppost.create(post)
-    return post
-
-
-@app.get("/new")
-def update(session: Session = Depends(get_session), coisa: str = ""):
-    post = Post(content=coisa)
-    ppost = BaseService(Post, session)
-    ppost.create(post)
-    return post
+def test():
+    return {"yes": "no"}

@@ -24,38 +24,27 @@ class BaseService(Generic[M]):
     def create(self, new_entry: M) -> M:
         db_entry = self.model.from_orm(new_entry)
         self._update_model(db_entry, new_entry)
-        self.session.add(new_entry)
+        self.session.add(db_entry)
         self.session.commit()
-        self.session.refresh(new_entry)
+        self.session.refresh(db_entry)
         logger.debug(f"new entry added to {self.model.__name__}")
-        return new_entry
+        return db_entry
 
-    def read(self, *where: BinaryExpression) -> M:
-        query = select(self.model).where(*where)
-        result = self.session.exec(query).one_or_none()
+    def read(self, id: int) -> M:
+        db_entry = self.session.get(self.model, id)
+        self._validate_not_empty(db_entry)
+        logger.debug(f"found {self.model.__name__} with id {db_entry.id}")
+        return db_entry
 
-        if result is None:
-            logger.error(f"{self.model.__name__} not found")
-            raise HTTPException(
-                status_code=404, detail=f"{self.model.__name__} not found")
-
-        logger.debug(f"found {self.model.__name__} with id {result.id}")
-        return result
-
-    def read_all(self, *where: BinaryExpression, skip: int = 0, limit: int = 100) -> M:
+    def read_all(self, skip: int = 0, limit: int = 100) -> M:
         query = select(self.model).offset(skip).limit(limit)
         result = self.session.exec(query).all()
         logger.debug(f"read {len(result)} lines from {skip} to {skip+limit}")
         return result
 
     def update(self, id: int, schema: M) -> M:
-        db_entry = self.read(self.model.id == id)
-
-        if db_entry is None:
-            logger.debug(f"{self.model.__name__} not found")
-            raise HTTPException(
-                status_code=404, detail=f"{self.model.__name__} not found")
-
+        db_entry = self.session.get(self.model, id)
+        self._validate_not_empty(db_entry)
         self._update_model(db_entry, schema)
         self.session.add(db_entry)
         self.session.commit()
@@ -64,7 +53,8 @@ class BaseService(Generic[M]):
         return db_entry
 
     def delete(self, id: int) -> bool:
-        db_entry = self.read(self.model.id == id)
+        db_entry = self.session.get(self.model, id)
+        self._validate_not_empty(db_entry)
         self.session.delete(db_entry)
         self.session.commit()
         logger.debug(f"{self.model.__name__} with id {id} deleted")
@@ -75,3 +65,9 @@ class BaseService(Generic[M]):
         result = self.session.exec(query).all()
         logger.debug(f"search found {len(result)} lines")
         return result
+
+    def _validate_not_empty(self, db_entry):
+        if db_entry is None:
+            logger.debug(f"{self.model.__name__} not found")
+            raise HTTPException(
+                status_code=404, detail=f"{self.model.__name__} not found")

@@ -9,7 +9,6 @@ from . import database
 logger = logging.getLogger(__name__)
 
 
-
 def get_session() -> Session:
     with Session(database.engine) as session:
         yield session
