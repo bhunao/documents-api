@@ -1,0 +1,9 @@
+# app
+fastapi>=0.105.0,<0.106.0
+pydantic>=1.8.0,<2.0.0
+uvicorn>=0.15.0,<0.16.0
+sqlmodel==0.0.8
+pytest==7.4.2
+# db
+databases[postgresql]==0.4.2
+alembic==1.4.2
