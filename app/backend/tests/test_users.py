@@ -1,14 +1,33 @@
-import pytest
+from pytest import fixture
 from typing import Generator
+from random import randint
 
 from fastapi.testclient import TestClient
+from sqlalchemy.pool import StaticPool
 from sqlmodel import SQLModel, Session, create_engine
 
-from ..core.database import get_session, postgre_url, engine
+from ..core.database import get_session, engine
 from ..main import app
 
 
-# engine = create_engine(postgre_url, echo=False)
+@fixture(name="session")
+def session_fixture():
+    engine = create_engine(
+        "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
+    )
+    SQLModel.metadata.create_all(engine)
+    with Session(engine) as session:
+        yield session
+
+
+@fixture(name="client")
+def client_fixture(session: Session):
+    def get_session_override():
+        return session
+    app.dependency_overrides[get_session] = get_session_override
+    client = TestClient(app)
+    yield client
+    app.dependency_overrides.clear()
 
 
 def override_get_session() -> Generator[Session, None, None]:
@@ -16,28 +35,31 @@ def override_get_session() -> Generator[Session, None, None]:
         yield session
 
 
-@pytest.fixture()
-def test_db():
-    SQLModel.metadata.create_all(bind=engine)
-    yield
-    SQLModel.metadata.drop_all(bind=engine)
-
-
 app.dependency_overrides[get_session] = override_get_session
 client = TestClient(app)
 
 
-def test_read_main():
+def test_read_main(client: TestClient):
     response = client.get("/")
     assert response.status_code == 200
     assert response.json() == {"homepage": True}
 
 
-def test_wrong_login(test_db):
+def test_create_user(client: TestClient):
+    rand_n = randint(0, 999)
+    username = f"user{rand_n}"
+    password = f"password{rand_n}"
+    form_data = f"grant_type=&username={username}&password={password}&scope=&client_id=&client_secret="
+
     response = client.post(
-        "/signup",
-        json={"username": "treco", "password": "dpfojasd"}
+        "/user/signup",
+        data=form_data,
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "accept": " application/json"
+            }
     )
     data = response.json()
-    assert response.status_code == 422
-    assert data == "algo"
+    assert response.status_code == 200
+    assert data["username"] == username
+    # assert data["password"] == password # TODO: verify hash
