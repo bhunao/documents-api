@@ -62,4 +62,4 @@ def test_create_user(client: TestClient):
     data = response.json()
     assert response.status_code == 200
     assert data["username"] == username
-    # assert data["password"] == password # TODO: verify hash
+    # assert data["password"] == password # TODO: verify hash.
