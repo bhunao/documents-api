@@ -1,3 +1,6 @@
+# TEMPLATE
 
-## TODO
-- deal with the 'backend' folder name problem
+## run tests
+```shell
+docker run -it --rm template_fastapi-web pytest
+```

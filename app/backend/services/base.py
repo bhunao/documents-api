@@ -1,5 +1,5 @@
 import logging
-from typing import Generic, List, TypeVar
+from typing import Generic, List, TypeVar, Union
 
 from fastapi import HTTPException
 from sqlalchemy.sql.elements import BinaryExpression
@@ -12,7 +12,8 @@ M = TypeVar("M", bound=SQLModel)
 
 
 class BaseService(Generic[M]):
-    def __init__(self, model: M, session: Session) -> None:
+    def __init__(self, model: M,
+                 session: Session) -> None:
         self.model: M = model
         self.session = session
         logger.info(f"BaseModule created with model {model.__name__}")
@@ -30,13 +31,15 @@ class BaseService(Generic[M]):
         logger.debug(f"new entry added to {self.model.__name__}")
         return db_entry
 
-    def read(self, id: int) -> M:
+    def read(self, id: Union[int, str]) -> M:
         db_entry = self.session.get(self.model, id)
+        if db_entry is None:
+            raise HTTPException(status_code=404, detail="Item not found")
         self._validate_not_empty(db_entry)
         logger.debug(f"found {self.model.__name__} with id {db_entry.id}")
         return db_entry
 
-    def read_all(self, skip: int = 0, limit: int = 100) -> M:
+    def read_all(self, skip: int = 0, limit: int = 100) -> List[M]:
         query = select(self.model).offset(skip).limit(limit)
         result = self.session.exec(query).all()
         logger.debug(f"read {len(result)} lines from {skip} to {skip+limit}")

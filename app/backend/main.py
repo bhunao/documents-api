@@ -1,12 +1,8 @@
-import logging
-
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
-from .core.utils import lifespan
-from .routes import news, users
-
-
-logger = logging.getLogger(__name__)
+from .core.dependencies import lifespan
+from . import routers
 
 
 TITLE = "WiproXD"
@@ -14,11 +10,12 @@ app = FastAPI(
     title=TITLE,
     lifespan=lifespan
 )
-
-app.include_router(users.router)
-app.include_router(news.router)
+app.mount("/static", StaticFiles(directory="static/"), name="static")
+app.include_router(routers.posts)
+app.include_router(routers.users)
 
 
 @app.get("/")
-def test():
-    return {"yes": "no"}
+async def read_all(
+):
+    return {"homepage": True}

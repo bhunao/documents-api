@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster
+FROM python:3.11-slim-buster
  
 WORKDIR /app
  
@@ -13,6 +13,10 @@ RUN apt-get update \
 RUN pip install psycopg2-binary
 RUN pip install --upgrade pip
 COPY ./requirements.txt /app/requirements.txt
+RUN pip uninstall pyjwt[crypto]
+RUN pip uninstall cryptography
 RUN pip install -r requirements.txt
  
 COPY . /app
+
+# RUN pytest
