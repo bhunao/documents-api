@@ -13,7 +13,7 @@ from .config import UserConfigs
 from .database import get_session
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Could not validate credentials",
@@ -21,76 +21,77 @@ credentials_exception = HTTPException(
 )
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode, UserConfigs.SECRET_KEY, algorithm=UserConfigs.ALGORITHM)
-    return encoded_jwt
+class Authentication:
+    @staticmethod
+    def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+        to_encode = data.copy()
+        if expires_delta:
+            expire = datetime.now(timezone.utc) + expires_delta
+        else:
+            expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            to_encode, UserConfigs.SECRET_KEY, algorithm=UserConfigs.ALGORITHM)
+        return encoded_jwt
 
-
-def get_current_user_from_cookie(
-        access_token: str,
-        session: Session
-        ):
-    try:
-        payload = jwt.decode(
-            access_token,
-            UserConfigs.SECRET_KEY,
-            algorithms=[UserConfigs.ALGORITHM]
-        )
-        username = payload.get("sub")
-        assert isinstance(username, str)
-        if username is None:
+    @staticmethod
+    def get_current_user_from_cookie(
+            access_token: str,
+            session: Session
+    ):
+        try:
+            payload = jwt.decode(
+                access_token,
+                UserConfigs.SECRET_KEY,
+                algorithms=[UserConfigs.ALGORITHM]
+            )
+            username = payload.get("sub")
+            assert isinstance(username, str)
+            if username is None:
+                raise credentials_exception
+            token_data = schemas.TokenData(username=username)
+        except JWTError as e:
+            print("="*100)
+            print(e)
             raise credentials_exception
-        token_data = schemas.TokenData(username=username)
-    except JWTError as e:
-        print("="*100)
-        print(e)
-        raise credentials_exception
 
-
-    user = UserService(session).search(
-        models.User.username == token_data.username)
-    if len(user) < 1 or user is None:
-        raise credentials_exception
-    user = user[0]
-    return user
-
-
-async def get_current_user(
-        token: Annotated[str, Depends(oauth2_scheme)],
-        session: Session = Depends(get_session)
-):
-    try:
-        payload = jwt.decode(
-            token,
-            UserConfigs.SECRET_KEY,
-            algorithms=[UserConfigs.ALGORITHM]
-        )
-        username = payload.get("sub")
-        assert isinstance(username, str)
-        if username is None:
+        user = UserService(session).search(
+            models.User.username == token_data.username)
+        if len(user) < 1 or user is None:
             raise credentials_exception
-        token_data = schemas.TokenData(username=username)
-    except JWTError:
-        raise credentials_exception
+        user = user[0]
+        return user
 
-    user = UserService(session).search(
-        models.User.username == token_data.username)
-    if len(user) < 1 or user is None:
-        raise credentials_exception
-    user = user[0]
-    return user
+    @staticmethod
+    async def get_current_user(
+            token: Annotated[str, Depends(oauth2_scheme)],
+            session: Session = Depends(get_session)
+    ):
+        try:
+            payload = jwt.decode(
+                token,
+                UserConfigs.SECRET_KEY,
+                algorithms=[UserConfigs.ALGORITHM]
+            )
+            username = payload.get("sub")
+            assert isinstance(username, str)
+            if username is None:
+                raise credentials_exception
+            token_data = schemas.TokenData(username=username)
+        except JWTError:
+            raise credentials_exception
 
+        user = UserService(session).search(
+            models.User.username == token_data.username)
+        if len(user) < 1 or user is None:
+            raise credentials_exception
+        user = user[0]
+        return user
 
-async def get_current_active_user(
-    current_user: Annotated[models.User, Depends(get_current_user)]
-):
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user
+    @staticmethod
+    async def get_current_active_user(
+        current_user: Annotated[models.User, Depends(get_current_user)]
+    ):
+        if current_user.disabled:
+            raise HTTPException(status_code=400, detail="Inactive user")
+        return current_user

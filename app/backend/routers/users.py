@@ -6,8 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session
 
 from .. import schemas, models
-from ..core.authentication import (
-    create_access_token, get_current_active_user, get_current_user_from_cookie)
+from ..core.authentication import Authentication
 from ..core.config import UserConfigs
 from ..core.database import get_session
 from ..services.user import UserService
@@ -53,7 +52,7 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(
         minutes=UserConfigs.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
+    access_token = Authentication.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     response.set_cookie(
@@ -71,7 +70,7 @@ async def logout(
 ):
     if access_token is None:
         return {"msg": "you're not logged in."}
-    user = get_current_user_from_cookie(access_token, session)
+    user = Authentication.get_current_user_from_cookie(access_token, session)
     if not user:
         return {"msg": "you're not logged in."}
 
@@ -81,7 +80,7 @@ async def logout(
 
 @router.get("/me/", response_model=models.User)
 async def read_users_me(
-    current_user: Annotated[models.User, Depends(get_current_active_user)]
+    current_user: Annotated[models.User, Depends(Authentication.get_current_active_user)]
 ):
     return current_user
 
@@ -92,5 +91,5 @@ async def get_cookie(
         session: Session = Depends(get_session)
 ):
     assert access_token is not None
-    user = get_current_user_from_cookie(access_token, session)
+    user = Authentication.get_current_user_from_cookie(access_token, session)
     return {"user": user.username}
