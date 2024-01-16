@@ -8,7 +8,6 @@ from jose import JWTError, jwt
 from sqlmodel import Session
 
 from .. import schemas, models
-from ..services.base import BaseService
 from ..services.user import UserService
 from .config import UserConfigs
 from .database import get_session
@@ -81,7 +80,7 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    user = BaseService(models.User, session).search(
+    user = UserService(session).search(
         models.User.username == token_data.username)
     if len(user) < 1 or user is None:
         raise credentials_exception
