@@ -1,0 +1,9 @@
+sqlalchemy
+passlib
+pydantic
+pydantic-settings
+sqlmodel
+pyjwt
+psycopg
+psycopg2-binary
+databases[postgresql]

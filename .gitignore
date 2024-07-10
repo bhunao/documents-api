@@ -1,8 +1,5 @@
-__pycache__
 __pycache__/*
-*.db
+__pycache__*
 .env
-openapi.yaml
-result.xml
-tests.log
 
+*.db
