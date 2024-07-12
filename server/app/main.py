@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 
-app = FastAPI()
+from app.utils import lifespan
+
+app = FastAPI(
+    lifespan=lifespan
+)
 
 
 @app.get("/")

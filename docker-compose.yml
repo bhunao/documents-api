@@ -1,12 +1,28 @@
 services:
+  db:
+    image: postgres:13-alpine
+    volumes:
+      - app-database:/var/lib/postgresql/data/
+    ports:
+      - "${POSTGRES_PORT?Variable not set}:${POSTGRES_PORT?Variable not set}"
+    env_file:
+      - .env
+    environment:
+      # - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+      - POSTGRES_USER=${POSTGRES_USER?Variable not set}
+      - POSTGRES_DB=${POSTGRES_DB?Variable not set}
+
   web:
     restart: "no"
+    depends_on:
+      - db
     ports:
       - "8001:80"
     volumes:
-      - ./app/:/app/
+      - ./server/:/app
     build:
-      context: ./app
+      context: ./server
     env_file:
       - .env
     environment:
@@ -15,3 +31,28 @@ services:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER?Variable not set}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD?Variable not set}
+
+  pgweb:
+    restart: always
+    image: sosedoff/pgweb
+    ports:
+      - "8081:8081"
+    env_file:
+      - .env
+    environment:
+      PGWEB_DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable
+    depends_on:
+      - db
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - ADMINER_DESIGN=pepa-linha-dark
+
+volumes:
+  app-database:
