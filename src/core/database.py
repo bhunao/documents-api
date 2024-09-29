@@ -2,7 +2,7 @@ import logging
 from typing import TypeVar
 
 
-from sqlmodel import SQLModel as MODEL
+from sqlmodel import SQLModel as SQLModel
 from sqlmodel import select, Session
 
 from sqlmodel import create_engine
@@ -22,14 +22,11 @@ postgre_url = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVE
 engine = create_engine(postgre_url, echo=False)
 
 
-MODEL_T = TypeVar("MODEL_T", bound=MODEL)
-
-
 class BaseDatabase:
     def __init__(self, session: Session):
         self.session: Session = session
 
-    def create(self, record: MODEL, table: MODEL = None) -> MODEL:
+    def create(self, record: SQLModel, table: SQLModel = None) -> SQLModel:
         table = table if table else record.__class__
 
         new_record = table.model_validate(record, from_attributes=True)
@@ -40,21 +37,21 @@ class BaseDatabase:
             f"Record {table.__name__}(id={new_record.id}) created.")
         return new_record
 
-    def read(self, table: MODEL_T, id: int) -> MODEL_T | None:
+    def read(self, table: SQLModel, id: int) -> SQLModel | None:
         db_record = self.session.get(table, id)
         return db_record
 
     def read_all(
             self,
-            table: MODEL = None,
+            table: SQLModel = None,
             skip: int = 0,
             limit: int = 100
-    ) -> list[MODEL]:
+    ) -> list[SQLModel]:
         query = select(table).offset(skip).limit(limit)
         result = self.session.exec(query).all()
         return result
 
-    def update(self, record: MODEL, table: MODEL = None) -> MODEL | None:
+    def update(self, record: SQLModel, table: SQLModel = None) -> SQLModel | None:
         table = table if table else record.__class__
         db_record = self.session.get(table, record.id)
         if db_record is None:
@@ -65,7 +62,7 @@ class BaseDatabase:
         self.session.refresh(db_record)
         return db_record
 
-    def delete(self, table: MODEL, id: int) -> MODEL | None:
+    def delete(self, table: SQLModel, id: int) -> SQLModel | None:
         db_record = self.session.get(table, id)
         if db_record is None:
             return None

@@ -1,3 +1,10 @@
 # FastApi HTMX Uvicorn Bootstrap
 
-Template for using FastApi, HTMX and Bootstrap.
+Core template for FastAPI projects with  base structures.
+
+## FastTemplate.core
+
+- Errors
+- Database connection ready
+- FastApi Dependencies
+- Config Class(Pydantic)
