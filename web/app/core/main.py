@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from typing import Any
 
 from app.core.config import settings
@@ -16,13 +15,16 @@ def app_context(request: Request) -> dict[str, Any]:
 # Templating with Jinja2Blocks
 templates: Jinja2Blocks = Jinja2Blocks(
     directory=settings.TEMPLATE_FOLDER,
-    context_processors=[app_context],
+    context_processors=[
+        app_context,
+    ],
 )
 
 ## Filters
-template_filters: dict[str, Callable[[Any], Any]] = templates.env.filters
+template_filters = templates.env.filters
 template_filters["input_type"] = get_input_type
 template_filters["myfiltro"] = test_jinja_filter
 
 ## Globals
-template_globals: dict[str, Callable[[Any], Any]] = templates.env.globals
+template_globals: dict[str, Any] = templates.env.globals
+template_globals["app_name"] = settings.APP_NAME
