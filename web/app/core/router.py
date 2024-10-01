@@ -1,11 +1,11 @@
 from typing import Any, Callable
-from sqlmodel import SQLModel
+from sqlmodel import Field, SQLModel
 from app.core.main import templates, template_filters
 from app.core.config import Settings, settings
 from fastapi import APIRouter, Request
 
 from app.core.database import engine
-from app.core.utils import database_connection
+from app.core.utils import database_connection, stringfy_name
 
 
 router = APIRouter(
@@ -34,11 +34,12 @@ class DatabaseCheck(SQLModel):
 
 
 CONTEXT_PROCESSORS = list(map(name_n_desc, templates.context_processors))
-FILTERS = list(map(lambda f: str(f.__name__), template_filters.values()))
+FILTERS = list(map(stringfy_name, template_filters.values()))
+
 class TemplateCheck(SQLModel):
-    folder: str = settings.TEMPLATE_FOLDER
-    context_processors: list[str] = CONTEXT_PROCESSORS
-    filters: list[str] = FILTERS
+    folder: str = Field(default=settings.TEMPLATE_FOLDER)
+    context_processors: list[str] = Field(default=CONTEXT_PROCESSORS)
+    filters: list[str] = Field(default=FILTERS)
 
 class HealthCheck(SQLModel):
     if settings.DEV_MODE is True:

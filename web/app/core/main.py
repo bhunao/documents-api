@@ -1,7 +1,7 @@
 from typing import Any
 
 from app.core.config import settings
-from app.core.utils import get_input_type, test_jinja_filter
+from app.core.utils import get_input_type
 
 from starlette.requests import Request
 from jinja2_fragments.fastapi import Jinja2Blocks
@@ -23,7 +23,6 @@ templates: Jinja2Blocks = Jinja2Blocks(
 ## Filters
 template_filters = templates.env.filters
 template_filters["input_type"] = get_input_type
-template_filters["myfiltro"] = test_jinja_filter
 
 ## Globals
 template_globals: dict[str, Any] = templates.env.globals

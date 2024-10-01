@@ -45,6 +45,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[dict[Any, Any]]:
     yield state
     log.debug(f"Finishing lifespan event of {settings.APP_NAME}.")
 
+
 def get_input_type(field: FieldInfo) -> str:
     annotation = field.annotation
     if annotation is int:
@@ -57,5 +58,7 @@ def get_input_type(field: FieldInfo) -> str:
         return "checkbox"
     return "text"
 
-def test_jinja_filter(asd: int) -> str:
-    return str(asd)+"mensagem"
+
+def stringfy_name(obj: Any):
+    """return a string of the object __name__ property"""
+    return str(obj.__name__)
