@@ -3,15 +3,11 @@ from collections.abc import Generator
 
 from sqlmodel import SQLModel, Session, create_engine, select
 
-from app.core.main import settings
+from app.core.config import settings
 
 
 engine = create_engine(str(settings.DATABASE_URI))
 logger = logging.getLogger(__name__)
-
-
-def lifespan_database():
-    SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Generator[Session, None, None]:
