@@ -8,7 +8,6 @@ from alembic.config import Config
 from fastapi import FastAPI, Request
 from sqlmodel import select
 from pydantic.fields import FieldInfo
-from app.core.database import SQLModel
 from app.core.config import settings
 
 from app.core.database import get_session
