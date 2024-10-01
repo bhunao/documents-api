@@ -24,6 +24,7 @@ def run_migrations():
     alembic_cfg = Config("alembic.ini")
     command.upgrade(alembic_cfg, "head")
 
+
 def database_connection() -> bool | Exception:
     try:
         with contextmanager(get_session)() as session:
