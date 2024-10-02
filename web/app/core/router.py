@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Callable
 from sqlmodel import Field, SQLModel
 from app.core.main import templates, template_filters
@@ -6,6 +7,10 @@ from fastapi import APIRouter, Request
 
 from app.core.database import engine
 from app.core.utils import database_connection, stringfy_name
+from app.models import Connection
+
+
+log = logging.getLogger(__name__)
 
 
 router = APIRouter(
@@ -50,6 +55,7 @@ class HealthCheck(SQLModel):
 
 @router.get("/json")
 async def json_health_check():
+    log.debug(f"connection: {Connection()}")
     return HealthCheck()
 
 @router.get("/web")

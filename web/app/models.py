@@ -1,21 +1,10 @@
-from typing import Annotated
-from datetime import date
+from datetime import datetime
+from uuid import uuid4
 
-from sqlmodel import Field
-
+from pydantic import UUID4
 from sqlmodel import SQLModel, Field
 
 
-class BaseTransaction(SQLModel):
-    date: date
-    type: str
-    destiny: str
-    value: float
-
-class TransactionCreate(BaseTransaction):
-    pass
-
-
-class Transaction(BaseTransaction, table=True):
-    id: int = Field(primary_key=True)
-
+class Connection(SQLModel):
+    id: UUID4 = Field(primary_key=True, default_factory=uuid4)
+    time: datetime = Field(default_factory=datetime.now)
