@@ -1,12 +1,11 @@
-from collections.abc import Callable
 import logging
-from typing import Any
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.base import router as base_router
+from app.core.config import settings
 from app.core.router import router as core_router
-from app.core.main import settings
 from app.core.utils import lifespan
 
 
