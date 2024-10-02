@@ -1,6 +1,6 @@
 import logging
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, contextmanager
 from typing import Any
 
@@ -63,3 +63,18 @@ def get_input_type(field: FieldInfo) -> str:
 def stringfy_name(obj: Any):
     """return a string of the object __name__ property"""
     return str(obj.__name__)
+
+def name_n_desc(func: Callable[[Any | None], Any]):
+    return f"{func.__name__}: {func.__doc__}"
+
+def is_db_connected():
+    return True if database_connection() is True else False
+
+
+def get_db_connection_msg():
+    connected = database_connection()
+    if connected is True:
+        return str(engine.raw_connection().dialect)
+    else:
+        return str(connected)
+
