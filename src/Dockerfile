@@ -3,7 +3,7 @@ FROM python:3.11-slim-buster
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-WORKDIR /web
+WORKDIR /app
 
 COPY requirements.in .
 
@@ -16,7 +16,7 @@ RUN pip install -r requirements.txt
 
 EXPOSE 8777
 
-COPY . /web
+COPY . /app
 
 # CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8777", "--reload"]
 RUN chmod +x ./entrypoint.sh
