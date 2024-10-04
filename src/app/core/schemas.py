@@ -1,9 +1,8 @@
 from sqlmodel import SQLModel, Field
 
 from app.core.config import Settings, settings
-from app.core.database import engine
 from app.core.main import templates, template_filters
-from app.core.utils import database_connection, get_db_connection_msg, is_db_connected, name_n_desc, stringfy_name
+from app.core.utils import get_db_connection_msg, is_db_connected, name_n_desc, stringfy_name
 
 
 
