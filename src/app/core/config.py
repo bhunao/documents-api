@@ -1,6 +1,5 @@
 from typing import Any
 
-from jinja2_fragments.fastapi import Jinja2Blocks
 from pydantic.fields import computed_field
 from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings
