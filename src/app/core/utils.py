@@ -11,7 +11,7 @@ from fastapi import FastAPI, Request
 from pydantic.fields import FieldInfo
 from sqlmodel import select
 
-from app.core.database import get_session
+from app.core.database import get_session, engine
 
 log = logging.getLogger(__name__)
 
@@ -64,8 +64,10 @@ def stringfy_name(obj: Any):
     """return a string of the object __name__ property"""
     return str(obj.__name__)
 
+
 def name_n_desc(func: Callable[[Any | None], Any]):
     return f"{func.__name__}: {func.__doc__}"
+
 
 def is_db_connected():
     return True if database_connection() is True else False
@@ -77,4 +79,3 @@ def get_db_connection_msg():
         return str(engine.raw_connection().dialect)
     else:
         return str(connected)
-
