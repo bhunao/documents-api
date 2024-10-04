@@ -6,6 +6,7 @@ from app.core.utils import get_input_type
 from starlette.requests import Request
 from jinja2_fragments.fastapi import Jinja2Blocks
 
+
 def app_context(request: Request) -> dict[str, Any]:
     """Add context to the template."""
     assert request

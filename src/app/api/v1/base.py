@@ -12,5 +12,5 @@ async def base_endpoint(request: Request):
         name="base.html",
         context=dict(
             request=request,
-        )
+        ),
     )

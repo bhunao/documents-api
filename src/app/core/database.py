@@ -25,19 +25,15 @@ class BaseDatabase:
         self.session.add(new_record)
         self.session.commit()
         self.session.refresh(new_record)
-        logger.debug(
-            f"Record [{new_record} = ] created.")
+        logger.debug(f"Record [{new_record} = ] created.")
         return new_record
 
     def read(self, table: SQLModel, id: int) -> SQLModel | None:
-        db_record = self.session.get(table, id) # pyright: ignore[reportArgumentType]
+        db_record = self.session.get(table, id)  # pyright: ignore[reportArgumentType]
         return db_record
 
     def read_all(
-            self,
-            table: SQLModel,
-            skip: int = 0,
-            limit: int = 100
+        self, table: SQLModel, skip: int = 0, limit: int = 100
     ) -> list[SQLModel]:
         query = select(table).offset(skip).limit(limit)
         result = self.session.exec(query)
@@ -46,7 +42,7 @@ class BaseDatabase:
     def update(self, record: SQLModel) -> SQLModel | None:
         _table = record.__class__
         assert hasattr(_table, "id")
-        db_record = self.session.get(_table, record.id) 
+        db_record = self.session.get(_table, record.id)
         if db_record is None:
             return None
         updated_record = db_record.sqlmodel_update(record)
@@ -56,11 +52,10 @@ class BaseDatabase:
         return updated_record
 
     def delete(self, table: SQLModel, id: int) -> SQLModel | None:
-        db_record = self.session.get(table, id) # pyright: ignore[reportArgumentType]
+        db_record = self.session.get(table, id)  # pyright: ignore[reportArgumentType]
         if db_record is None:
             return None
         self.session.delete(db_record)
         self.session.commit()
-        logger.debug(
-            f"Record {table.__name__}(id={db_record.id}) deleted.")
+        logger.debug(f"Record {table.__name__}(id={db_record.id}) deleted.")
         return db_record

@@ -10,6 +10,7 @@ def app_context(request: Request) -> dict[str, Any]:
     """Add context to the template."""
     return {"test": "treco"}
 
+
 class Settings(BaseSettings):
     APP_NAME: str = "FastAPI Microservice"
 

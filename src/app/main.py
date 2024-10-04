@@ -11,16 +11,9 @@ from app.core.utils import lifespan
 
 logging.basicConfig(level=logging.DEBUG)
 
-app = FastAPI(
-    title=settings.APP_NAME,
-    lifespan=lifespan
-)
+app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 
-app.mount(
-    "/static",
-    StaticFiles(directory="static/"),
-    name="static"
-)
+app.mount("/static", StaticFiles(directory="static/"), name="static")
 
 app.include_router(base_router)
 app.include_router(core_router)

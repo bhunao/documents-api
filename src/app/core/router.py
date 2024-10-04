@@ -12,13 +12,15 @@ log = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/core",
     tags=["core"],
-    dependencies=None # TODO: add user previlege to acess thiss
+    dependencies=None,  # TODO: add user previlege to acess thiss
 )
+
 
 @router.get("/json")
 async def json_health_check():
     log.debug(f"connection: {Connection()}")
     return HealthCheck()
+
 
 @router.get("/web")
 async def html_health_check(request: Request):

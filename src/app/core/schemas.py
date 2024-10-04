@@ -2,9 +2,12 @@ from sqlmodel import SQLModel, Field
 
 from app.core.config import Settings, settings
 from app.core.main import templates, template_filters
-from app.core.utils import get_db_connection_msg, is_db_connected, name_n_desc, stringfy_name
-
-
+from app.core.utils import (
+    get_db_connection_msg,
+    is_db_connected,
+    name_n_desc,
+    stringfy_name,
+)
 
 
 class DatabaseCheck(SQLModel):
@@ -15,10 +18,12 @@ class DatabaseCheck(SQLModel):
 CONTEXT_PROCESSORS = list(map(name_n_desc, templates.context_processors))
 FILTERS = list(map(stringfy_name, template_filters.values()))
 
+
 class TemplateCheck(SQLModel):
     folder: str = Field(default=settings.TEMPLATE_FOLDER)
     context_processors: list[str] = Field(default=CONTEXT_PROCESSORS)
     filters: list[str] = Field(default=FILTERS)
+
 
 class HealthCheck(SQLModel):
     if settings.DEV_MODE is True:
